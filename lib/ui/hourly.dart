@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:myweather_flutter/service/weather-service.dart';
 import 'package:myweather_flutter/model/weather-hourly.dart';
 import 'package:myweather_flutter/helpers.dart';
-import 'package:myweather_flutter/shared/widget/bottom-bar.dart';
 
 class Hourly extends StatefulWidget {
   Hourly({Key key, this.title}) : super(key: key);
@@ -17,7 +16,8 @@ class Hourly extends StatefulWidget {
   _HourlyState createState() => _HourlyState();
 }
 
-class _HourlyState extends State<Hourly> {
+class _HourlyState extends State<Hourly>
+  with AutomaticKeepAliveClientMixin<Hourly> {
 
   ScrollController scr = ScrollController();
   List<WeatherHourly> list;
@@ -37,6 +37,9 @@ class _HourlyState extends State<Hourly> {
     super.dispose();
   }
 
+  @override
+  bool get wantKeepAlive => true;
+
   void load() async {
     try {
       setState(() {
@@ -51,8 +54,8 @@ class _HourlyState extends State<Hourly> {
 
     catch (error) {
       setState(() {
-       isLoading = false;
-       handleError(context, error, load);
+        isLoading = false;
+        handleError(context, error, load);
       });
     }
   }
@@ -142,19 +145,10 @@ class _HourlyState extends State<Hourly> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[],
-        automaticallyImplyLeading: false,
-      ),
-      body: RefreshIndicator(
-        key: refreshIndicatorKey,
-        onRefresh: refreshData,
-        child: buildContent(),
-      ),
-      bottomNavigationBar: CustomBottomBar(index: 1),
+    return RefreshIndicator(
+      key: refreshIndicatorKey,
+      onRefresh: refreshData,
+      child: buildContent(),
     );
   }
 }

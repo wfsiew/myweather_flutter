@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:myweather_flutter/service/weather-service.dart';
 import 'package:myweather_flutter/model/weather-daily.dart';
 import 'package:myweather_flutter/helpers.dart';
-import 'package:myweather_flutter/shared/widget/bottom-bar.dart';
 
 class Daily extends StatefulWidget {
   Daily({Key key, this.title}) : super(key: key);
@@ -17,7 +16,8 @@ class Daily extends StatefulWidget {
   _DailyState createState() => _DailyState();
 }
 
-class _DailyState extends State<Daily> {
+class _DailyState extends State<Daily>
+  with AutomaticKeepAliveClientMixin<Daily> {
 
   ScrollController scr = ScrollController();
   List<WeatherDaily> list;
@@ -34,8 +34,12 @@ class _DailyState extends State<Daily> {
   @override
   void dispose() {
     scr.dispose();
-    super.dispose();
+    super
+    .dispose();
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   void load() async {
     try {
@@ -51,8 +55,8 @@ class _DailyState extends State<Daily> {
 
     catch (error) {
       setState(() {
-       isLoading = false;
-       handleError(context, error, load);
+        isLoading = false;
+        handleError(context, error, load);
       });
     }
   }
@@ -157,19 +161,10 @@ class _DailyState extends State<Daily> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: <Widget>[],
-        automaticallyImplyLeading: false,
-      ),
-      body: RefreshIndicator(
-        key: refreshIndicatorKey,
-        onRefresh: refreshData,
-        child: buildContent(),
-      ),
-      bottomNavigationBar: CustomBottomBar(index: 2),
+    return RefreshIndicator(
+      key: refreshIndicatorKey,
+      onRefresh: refreshData,
+      child: buildContent(),
     );
   }
 }

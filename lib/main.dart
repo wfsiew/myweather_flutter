@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:myweather_flutter/ui/home.dart';
-import 'package:myweather_flutter/ui/hourly.dart';
-import 'package:myweather_flutter/ui/daily.dart';
 
 void main() => runApp(MyApp());
 
@@ -9,12 +7,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    var routes = <String, WidgetBuilder>{
-      Home.routeName: (BuildContext context) => Home(title: "My Weather"),
-      Hourly.routeName: (BuildContext context) => Hourly(title: 'My Weather - Hourly'),
-      Daily.routeName: (BuildContext context) => Daily(title: 'My Weather - Daily'),
-    };
-
     return MaterialApp(
       title: 'My Weather Forecast',
       debugShowCheckedModeBanner: false,
@@ -31,7 +23,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: 'My Weather Forecast'),
-      routes: routes,
     );
   }
 }
@@ -92,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return WillPopScope(
       onWillPop: willPop,
-      child: Home(title: 'Weather Info'),
+      child: Home(title: 'Weather Forecast'),
     );
   }
 }
