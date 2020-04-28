@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:myweather_flutter/service/weather-service.dart';
 import 'package:myweather_flutter/model/weather-hourly.dart';
 import 'package:myweather_flutter/helpers.dart';
+import 'package:location_permissions/location_permissions.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Hourly extends StatefulWidget {
   Hourly({Key key, this.title}) : super(key: key);
@@ -22,6 +24,7 @@ class _HourlyState extends State<Hourly>
   ScrollController scr = ScrollController();
   List<WeatherHourly> list;
   bool isLoading = false;
+  bool isLocationServiceEnabled = false;
   final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -40,12 +43,67 @@ class _HourlyState extends State<Hourly>
   @override
   bool get wantKeepAlive => true;
 
-  void load() async {
+  Future<void> checkLocationPermission() async {
+    PermissionStatus permission = await LocationPermissions().checkPermissionStatus();
+    if (permission != PermissionStatus.granted) {
+      permission = await LocationPermissions().requestPermissions();
+      if (permission != PermissionStatus.granted) {
+        setState(() {
+          isLocationServiceEnabled = false;
+          isLoading = false;
+          list = null;
+        });
+      }
+
+      else {
+        ServiceStatus serviceStatus = await LocationPermissions().checkServiceStatus();
+        if (serviceStatus == ServiceStatus.disabled) {
+          setState(() {
+            isLocationServiceEnabled = false;
+            isLoading = false;
+            list = null;
+          });
+        }
+
+        else if (serviceStatus == ServiceStatus.enabled) {
+          setState(() {
+            isLocationServiceEnabled = true;
+          });
+        }
+      }
+    }
+
+    else {
+      ServiceStatus serviceStatus = await LocationPermissions().checkServiceStatus();
+      if (serviceStatus == ServiceStatus.disabled) {
+        setState(() {
+          isLocationServiceEnabled = false;
+          isLoading = false;
+          list = null;
+        });
+      }
+
+      else if (serviceStatus == ServiceStatus.enabled) {
+        setState(() {
+          isLocationServiceEnabled = true;
+        });
+      }
+    }
+  }
+
+  Future<void> load() async {
     try {
+      await checkLocationPermission();
+      if (!isLocationServiceEnabled) {
+        return;
+      }
+
       setState(() {
         isLoading = true;
       });
-      var o = await getWeatherHourly();
+      final Geolocator geolocator = Geolocator();
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var o = await getWeatherHourly(position.latitude, position.longitude);
       setState(() {
         list = o;
         isLoading = false;
@@ -62,7 +120,14 @@ class _HourlyState extends State<Hourly>
 
   Future<void> refreshData() async {
     try {
-      var o = await getWeatherHourly();
+      await checkLocationPermission();
+      if (!isLocationServiceEnabled) {
+        return;
+      }
+
+      final Geolocator geolocator = Geolocator();
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var o = await getWeatherHourly(position.latitude, position.longitude);
       setState(() {
         list = o;
       });
@@ -127,8 +192,43 @@ class _HourlyState extends State<Hourly>
   }
 
   Widget buildContent() {
-    if (isLoading || list == null) {
+    if (!isLocationServiceEnabled) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Location Service not available',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 5.0, bottom: 5.0),
+          ),
+          RaisedButton(
+            elevation: 5,
+            color: Theme.of(context).primaryColor,
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                color: Colors.white
+              ),
+            ),
+            onPressed: () async {
+              await load();
+            },
+          ),
+        ],
+      );
+    }
+
+    if (isLoading) {
       return Center(child: CircularProgressIndicator());
+    }
+
+    if (!isLoading && list == null) {
+      return Center(child: Text('Unable to get hourly weather details'));
     }
 
     return Container(

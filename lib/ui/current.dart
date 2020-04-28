@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:myweather_flutter/service/weather-service.dart';
 import 'package:myweather_flutter/model/weather-info.dart';
 import 'package:myweather_flutter/helpers.dart';
+import 'package:location_permissions/location_permissions.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Current extends StatefulWidget {
   Current({Key key, this.title}) : super(key: key);
@@ -22,6 +24,7 @@ class _CurrentState extends State<Current>
   ScrollController scr = ScrollController();
   WeatherInfo info;
   bool isLoading = false;
+  bool isLocationServiceEnabled = false;
   final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -40,12 +43,67 @@ class _CurrentState extends State<Current>
   @override
   bool get wantKeepAlive => true;
 
-  void load() async {
+  Future<void> checkLocationPermission() async {
+    PermissionStatus permission = await LocationPermissions().checkPermissionStatus();
+    if (permission != PermissionStatus.granted) {
+      permission = await LocationPermissions().requestPermissions();
+      if (permission != PermissionStatus.granted) {
+        setState(() {
+          isLocationServiceEnabled = false;
+          isLoading = false;
+          info = null;
+        });
+      }
+
+      else {
+        ServiceStatus serviceStatus = await LocationPermissions().checkServiceStatus();
+        if (serviceStatus == ServiceStatus.disabled) {
+          setState(() {
+            isLocationServiceEnabled = false;
+            isLoading = false;
+            info = null;
+          });
+        }
+
+        else if (serviceStatus == ServiceStatus.enabled) {
+          setState(() {
+            isLocationServiceEnabled = true;
+          });
+        }
+      }
+    }
+
+    else {
+      ServiceStatus serviceStatus = await LocationPermissions().checkServiceStatus();
+      if (serviceStatus == ServiceStatus.disabled) {
+        setState(() {
+          isLocationServiceEnabled = false;
+          isLoading = false;
+          info = null;
+        });
+      }
+
+      else if (serviceStatus == ServiceStatus.enabled) {
+        setState(() {
+          isLocationServiceEnabled = true;
+        });
+      }
+    }
+  }
+
+  Future<void> load() async {
     try {
+      await checkLocationPermission();
+      if (!isLocationServiceEnabled) {
+        return;
+      }
+
       setState(() {
         isLoading = true;
       });
-      var o = await getWeatherCurrent();
+      final Geolocator geolocator = Geolocator();
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {
         info = o;
         isLoading = false;
@@ -62,7 +120,14 @@ class _CurrentState extends State<Current>
 
   Future<void> refreshData() async {
     try {
-      var o = await getWeatherCurrent();
+      await checkLocationPermission();
+      if (!isLocationServiceEnabled) {
+        return;
+      }
+
+      final Geolocator geolocator = Geolocator();
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {
         info = o;
       });
@@ -94,8 +159,43 @@ class _CurrentState extends State<Current>
   }
 
   Widget buildContent() {
-    if (isLoading || info == null) {
+    if (!isLocationServiceEnabled) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Location Service not available',
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 5.0, bottom: 5.0),
+          ),
+          RaisedButton(
+            elevation: 5,
+            color: Theme.of(context).primaryColor,
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                color: Colors.white
+              ),
+            ),
+            onPressed: () async {
+              await load();
+            },
+          ),
+        ],
+      );
+    }
+
+    if (isLoading) {
       return Center(child: CircularProgressIndicator());
+    }
+
+    if (!isLoading && info == null) {
+      return Center(child: Text('Unable to get current weather details'));
     }
 
     return Container(
@@ -115,6 +215,22 @@ class _CurrentState extends State<Current>
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            ),
+            ListTile(
+              title: Text('lat'),
+              trailing: Text('${info.lat}'),
+            ),
+            Divider(
+              color: Theme.of(context).colorScheme.primary, 
+              height: 2.0,
+            ),
+            ListTile(
+              title: Text('lon'),
+              trailing: Text('${info.lon}'),
+            ),
+            Divider(
+              color: Theme.of(context).colorScheme.primary, 
+              height: 2.0,
             ),
             ListTile(
               title: Text('dt'),

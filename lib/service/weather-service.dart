@@ -8,13 +8,13 @@ import 'package:myweather_flutter/model/weather-daily.dart';
 final String url = '${Constants.API_URL}';
 final Dio dio = Dio(BaseOptions(connectTimeout: 5000, receiveTimeout: 15000));
 
-Future<dynamic> getData() async {
+Future<dynamic> getData({double lat = 3.030112, double lon = 101.668607}) async {
   dynamic o;
 
   try {
     var res = await dio.get(url, queryParameters: {
-      'lat': 3.030112,
-      'lon': 101.668607,
+      'lat': lat,
+      'lon': lon,
       'units': 'metric',
       'appid': Constants.APPID
     });
@@ -28,11 +28,11 @@ Future<dynamic> getData() async {
   return o;
 }
 
-Future<WeatherInfo> getWeatherCurrent() async {
+Future<WeatherInfo> getWeatherCurrent(double lat, double lon) async {
   WeatherInfo o;
 
   try {
-    var data = await getData();
+    var data = await getData(lat: lat, lon: lon);
     o = WeatherInfo.fromJson(data);
   }
 
@@ -43,11 +43,11 @@ Future<WeatherInfo> getWeatherCurrent() async {
   return o;
 }
 
-Future<List<WeatherHourly>> getWeatherHourly() async {
+Future<List<WeatherHourly>> getWeatherHourly(double lat, double lon) async {
   List<WeatherHourly> lx;
 
   try {
-    var data = await getData();
+    var data = await getData(lat: lat, lon: lon);
     var ls = data['hourly'] as List;
     lx = ls.map<WeatherHourly>((x) => WeatherHourly.fromJson(x)).toList();
   }
@@ -59,11 +59,11 @@ Future<List<WeatherHourly>> getWeatherHourly() async {
   return lx;
 }
 
-Future<List<WeatherDaily>> getWeatherDaily() async {
+Future<List<WeatherDaily>> getWeatherDaily(double lat, double lon) async {
    List<WeatherDaily> lx;
 
   try {
-    var data = await getData();
+    var data = await getData(lat: lat, lon: lon);
     var ls = data['daily'] as List;
     lx = ls.map<WeatherDaily>((x) => WeatherDaily.fromJson(x)).toList();
   }
