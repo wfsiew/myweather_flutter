@@ -23,6 +23,7 @@ class _CurrentState extends State<Current>
 
   ScrollController scr = ScrollController();
   WeatherInfo info;
+  List<Placemark> lp;
   bool isLoading = false;
   bool isLocationServiceEnabled = false;
   final GlobalKey<RefreshIndicatorState> refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
@@ -103,9 +104,11 @@ class _CurrentState extends State<Current>
       });
       final Geolocator geolocator = Geolocator();
       Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var lx = await geolocator.placemarkFromPosition(position);
       var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {
         info = o;
+        lp = lx;
         isLoading = false;
       });
     }
@@ -127,9 +130,11 @@ class _CurrentState extends State<Current>
 
       final Geolocator geolocator = Geolocator();
       Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      var lx = await geolocator.placemarkFromPosition(position);
       var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {
         info = o;
+        lp = lx;
       });
     }
 
@@ -138,6 +143,17 @@ class _CurrentState extends State<Current>
         await refreshData();
       });
     }
+  }
+
+  String getPlacemarks() {
+    List<String> ls = List();
+    for (int i = 0; i < lp.length; i++) {
+      var x = lp[i];
+      ls.add('${x.locality}, ${x.postalCode}, ${x.country}');
+    }
+
+    String s = ls.join(' ');
+    return s;
   }
 
   Widget buildWeathers() {
@@ -227,6 +243,14 @@ class _CurrentState extends State<Current>
             ListTile(
               title: Text('lon'),
               trailing: Text('${info.lon}'),
+            ),
+            Divider(
+              color: Theme.of(context).colorScheme.primary, 
+              height: 2.0,
+            ),
+            ListTile(
+              title: Text('name'),
+              trailing: Text(getPlacemarks()),
             ),
             Divider(
               color: Theme.of(context).colorScheme.primary, 
