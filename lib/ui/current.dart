@@ -103,7 +103,7 @@ class _CurrentState extends State<Current>
         isLoading = true;
       });
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var lx = await geolocator.placemarkFromPosition(position);
       var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {
@@ -129,7 +129,7 @@ class _CurrentState extends State<Current>
       }
 
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var lx = await geolocator.placemarkFromPosition(position);
       var o = await getWeatherCurrent(position.latitude, position.longitude);
       setState(() {

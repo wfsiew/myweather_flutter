@@ -103,7 +103,7 @@ class _DailyState extends State<Daily>
         isLoading = true;
       });
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var o = await getWeatherDaily(position.latitude, position.longitude);
       setState(() {
         list = o;
@@ -127,7 +127,7 @@ class _DailyState extends State<Daily>
       }
 
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var o = await getWeatherDaily(position.latitude, position.longitude);
       setState(() {
         list = o;

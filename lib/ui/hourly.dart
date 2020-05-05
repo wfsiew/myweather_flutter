@@ -102,7 +102,7 @@ class _HourlyState extends State<Hourly>
         isLoading = true;
       });
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var o = await getWeatherHourly(position.latitude, position.longitude);
       setState(() {
         list = o;
@@ -126,7 +126,7 @@ class _HourlyState extends State<Hourly>
       }
 
       final Geolocator geolocator = Geolocator();
-      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
       var o = await getWeatherHourly(position.latitude, position.longitude);
       setState(() {
         list = o;
